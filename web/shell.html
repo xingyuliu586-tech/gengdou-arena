@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="梗斗竞技场：奶蛙、牛来、袋鼠和豆包的 2D 横版格斗游戏，支持本地双人和人机对战。">
+  <title>$GODOT_PROJECT_NAME · 在线游玩</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#101422;color:#f9f5e8;font-family:system-ui,"Microsoft YaHei",sans-serif;min-height:100vh;display:grid;place-items:center}
+    main{width:min(1280px,100vw);padding:16px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}h1{font-size:24px;color:#ffd04a;margin:0}header span{font-size:13px;color:#bbc1d4}
+    #frame{position:relative;aspect-ratio:16/9;background:#080b12;border:1px solid #3a425b;border-radius:12px;overflow:hidden;box-shadow:0 20px 70px #0008}canvas{width:100%;height:100%;display:block;outline:none}
+    #cover{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#293956,#121725 75%);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;gap:16px}#cover h2{font-size:clamp(26px,5vw,62px);color:#ffd04a;margin:0}#cover p{margin:0;color:#d0d6e8;max-width:600px;line-height:1.7}button{border:0;border-radius:8px;padding:12px 25px;background:#ffd04a;color:#20212a;font-weight:700;font-size:16px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}#fullscreen{background:#283249;color:#f4f6ff;font-size:13px;padding:8px 14px}progress{width:min(360px,80%);height:12px;accent-color:#ffd04a}#status{font-size:14px;white-space:pre-line;word-break:break-word}
+    footer{color:#b3bdd2;font-size:13px;line-height:1.8;margin-top:12px}footer strong{color:#f3e9c7}#frame:fullscreen{border:0;border-radius:0;width:100vw;height:100vh;aspect-ratio:auto;display:grid;place-items:center}#frame:fullscreen canvas{width:min(100vw,177.7778vh);height:min(100vh,56.25vw)}
+    @media(max-width:650px){main{padding:6px}header span{display:none}h1{font-size:19px}footer{font-size:11px}#cover{gap:8px}#cover p{font-size:12px}button{padding:9px 20px}}
+  </style>
+  $GODOT_HEAD_INCLUDE
+</head>
+<body>
+<main>
+  <header><h1>梗斗竞技场</h1><span>四位角色 · 本地双人 / 人机对战</span><button id="fullscreen">全屏游玩</button></header>
+  <div id="frame">
+    <canvas id="canvas" width="1280" height="720" tabindex="0">请使用支持 WebGL 2 的浏览器。</canvas>
+    <div id="cover"><h2>梗斗竞技场</h2><p>奶蛙 · 牛来 · 袋鼠 · 豆包<br>准备好来一场正面交锋了吗？</p><button id="start">开始游戏</button><progress id="progress" hidden></progress><p id="status">建议使用电脑键盘游玩。首次载入需要下载游戏资源。</p></div>
+  </div>
+  <footer><strong>1P</strong> A / D 移动 · K 跳跃 · S 防御 · J 普攻 · U 技能 · I 大招 · L 冲刺<br><strong>2P</strong> 方向键移动/防御 · 1 普攻 · 2 跳跃 · 3 冲刺 · 4 技能 · 5 大招（主键盘或小键盘均可）<br>J / Enter 确认菜单 · Esc 暂停 · 进入后点击画面启用键盘与声音。本地双人共用一台电脑。</footer>
+</main>
+<noscript>请启用 JavaScript 后运行游戏。</noscript>
+<script src="$GODOT_URL"></script>
+<script>
+const config=$GODOT_CONFIG;
+const engine=new Engine(config);
+const canvas=document.getElementById('canvas');
+const start=document.getElementById('start');
+const status=document.getElementById('status');
+const progress=document.getElementById('progress');
+let running=false;
+start.addEventListener('click',async()=>{
+  start.disabled=true;progress.hidden=false;status.textContent='正在加载游戏，请稍候…';
+  try{
+    const missing=Engine.getMissingFeatures({threads:$GODOT_THREADS_ENABLED});
+    if(missing.length)throw new Error('浏览器缺少所需功能：'+missing.join('、')+'。请使用新版 Chrome、Edge 或 Firefox。');
+    await engine.startGame({canvas,canvasResizePolicy:0,onProgress:(current,total)=>{if(total>0){progress.value=current;progress.max=total;status.textContent='加载中 '+Math.round(current/total*100)+'%';}}});
+    running=true;document.getElementById('cover').hidden=true;document.getElementById('cover').style.display='none';canvas.focus();
+  }catch(error){console.error(error);status.textContent='加载失败：'+error.message;start.textContent='刷新后重试';start.disabled=false;}
+});
+canvas.addEventListener('pointerdown',()=>canvas.focus());
+document.getElementById('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.getElementById('frame').requestFullscreen();canvas.focus();}catch(error){status.textContent=error.message;}});
+window.addEventListener('keydown',event=>{if(running&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(event.code))event.preventDefault();});
+</script>
+</body>
+</html>

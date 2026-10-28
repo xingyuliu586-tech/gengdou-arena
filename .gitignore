@@ -1,0 +1,6 @@
+.godot/
+builds/
+dist/
+web-build/
+_site/
+*.tmp
